@@ -34,17 +34,19 @@ def home():
 
 @app.route("/translate", methods=['POST'])
 def translate():
-    text = request.get_json("text")
-    print(text)
+    input_json = request.get_json()
+    print(input_json['text'])
+    text = input_json['text']
     embeddings = src_tokenizer(text, return_attention_mask=False, return_token_type_ids=False, return_tensors='pt')
     with semaphore:
         embeddings = src_tokenizer(text, return_attention_mask=False, return_token_type_ids=False, return_tensors='pt')
         output = model.generate(**embeddings)[0, 1:-1].cpu()
         del embeddings
+    print(trg_tokenizer.decode(output))
     return trg_tokenizer.decode(output)
         
 if __name__ == "__main__":
     # app.run(host='0.0.0.0', port='5000')
-    app.run(host='0.0.0.0', port='5001', debug=True)
+    app.run(host='0.0.0.0', debug=True)
 
     
