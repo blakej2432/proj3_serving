@@ -43,7 +43,7 @@ def translate():
         output = model.generate(**embeddings)[0, 1:-1].cpu()
         del embeddings
     print(trg_tokenizer.decode(output))
-    return trg_tokenizer.decode(output)
+    return jsonify({'answer':trg_tokenizer.decode(output)})
         
 if __name__ == "__main__":
     # app.run(host='0.0.0.0', port='5000')
