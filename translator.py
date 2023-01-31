@@ -1,7 +1,8 @@
 # pip install kobert-transformers
+import re
 import torch
 from flask import Flask, request, jsonify 
-from transformers import (
+from transformers import ( pipeline,
     PreTrainedTokenizerFast as BaseGPT2Tokenizer,
     EncoderDecoderModel
 )
@@ -19,6 +20,8 @@ src_tokenizer = KoBertTokenizer.from_pretrained('monologg/kobert')
 trg_tokenizer = GPT2Tokenizer.from_pretrained("skt/kogpt2-base-v2",
   bos_token='</s>', eos_token='</s>', unk_token='<unk>',
   pad_token='<pad>', mask_token='<mask>')
+
+ko_ko = pipeline(model="circulus/kobart-correct-v1")
 
 model = EncoderDecoderModel.from_pretrained('leadawon/jeju-ko-nmt-v6')
 model.config.decoder_start_token_id = trg_tokenizer.bos_token_id
@@ -41,10 +44,13 @@ def translate():
     with semaphore:
         embeddings = src_tokenizer(text, return_attention_mask=False, return_token_type_ids=False, return_tensors='pt')
         output = model.generate(**embeddings)[0, 1:-1].cpu()
+        x = re.sub("  "," ",trg_tokenizer.decode(output))
+        answer = re.sub("  "," ", x)    
+        answer = ko_ko(answer)[0]['generated_text']
         del embeddings
-    print(trg_tokenizer.decode(output))
-    return jsonify({'answer':trg_tokenizer.decode(output)})
-        
+    print(answer)
+    return jsonify({'answer':answer})
+
 if __name__ == "__main__":
     # app.run(host='0.0.0.0', port='5000')
     app.run(host='0.0.0.0')
